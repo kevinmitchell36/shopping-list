@@ -7,7 +7,7 @@ const filterPlain = document.getElementById('filter');
 
 {/* <button id="clear" class="btn-clear">Clear All</button> */}
 
-function addItem(e) {
+function itemSubmit(e) {
   e.preventDefault(); // Must include to prevent the submit from persisting to file/page
   
   newItem = itemInput.value
@@ -15,26 +15,41 @@ function addItem(e) {
     alert('Please type in an item');
     return;
   }
-  
+
+  addItemToDOM(newItem);
+
+  addItemToStorage(newItem);
+  // Check UI
+  checkUI();
+  // Reset text field
+  itemInput.value = '';
+}
+
+function addItemToDOM(item) {
   const li = document.createElement('li');
-  li.appendChild(document.createTextNode(newItem));
-  
+  li.appendChild(document.createTextNode(item));
   // Create and append button
   const button = createButton('remove-item btn-link text-red');
   li.appendChild(button);
-  
   // Create and append icon
   const icon = createIcon('fa-solid fa-xmark');
   button.appendChild(icon);
-  
   // Add to DOM
   itemList.appendChild(li);
-  
-  // Check UI
-  checkUI();
-  
-  // Reset text field
-  itemInput.value = '';
+}
+
+function addItemToStorage(item) {
+  let itemsFromStorage;
+
+  if (localStorage.getItem('items') === null) {
+    itemsFromStorage = [];
+  } else {
+    itemsFromStorage = JSON.parse(localStorage.getItem('items'));
+  }
+
+  itemsFromStorage.push(item);
+
+  localStorage.setItem('items', JSON.stringify(itemsFromStorage)); 
 }
 
 // Create button
@@ -60,6 +75,21 @@ function removeItem(e) {
   }
 }
 
+function filterItems(e) {
+  const text = e.target.value.toLowerCase();
+  
+  const items = itemList.querySelectorAll('li');
+  items.forEach( function(item) {
+    const itemName = item.firstChild.textContent.toLowerCase();
+    if (itemName.includes(text)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none'
+    }
+  })
+  
+}
+
 function clearList() {
   while (itemList.firstChild) {
     itemList.removeChild(itemList.firstChild);
@@ -80,7 +110,9 @@ function checkUI() {
 }
 
 // Write listeners
-itemForm.addEventListener('submit', addItem);
+itemForm.addEventListener('submit', itemSubmit);
 itemList.addEventListener('click', removeItem);
 clearButton.addEventListener('click', clearList);
+filterPlain.addEventListener('input', filterItems);
+
 checkUI();
